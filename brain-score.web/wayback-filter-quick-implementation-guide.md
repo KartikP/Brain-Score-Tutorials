@@ -584,55 +584,6 @@ children.forEach(childId => {
 });
 ```
 
-## Key Technical Challenges & Solutions
-
-### Challenge 1: Data Overwrite Issue
-**Problem**: `updateFilteredScores` was overwriting wayback-filtered scores with original data.
-**Solution**: Modified `updateFilteredScores` to preserve wayback changes by deep copying input data and skipping original data restoration.
-
-### Challenge 2: Average Score Calculation
-**Problem**: `average_vision_v0` wasn't being recalculated when child scores changed.
-**Solution**: Added special handling for `average_vision_v0` that manually calculates average from `neural_vision_v0` and `behavior_vision_v0` scores.
-
-### Challenge 3: Date vs Unix Timestamp Handling
-**Problem**: UI needed date inputs but logic needed Unix timestamps.
-**Solution**: Consistent conversion between formats - store Unix internally, display ISO dates in UI.
-
-### Challenge 4: Model Removal Logic
-**Problem**: Models weren't being removed when all scores became 'X'.
-**Solution**: Added `_hasValidScore` flag tracking and proper filtering logic.
-
-### Challenge 5: Global Score Model Removal
-**Problem**: Models with valid individual scores but 'X' global scores weren't being removed.
-**Solution**: Added second filtering pass after `updateFilteredScores` to remove models where `average_vision_v0` is 'X'.
-
-### Challenge 6: Parent Column Hiding
-**Problem**: Abstract benchmarks (parent columns) with all 'X' values remained visible.
-**Solution**: Extended column visibility logic to hide both leaf and parent columns when all values are 'X'.
-
-### Challenge 7: Inaccurate Parent Score Calculation
-**Problem**: Dropped columns were still included in parent calculations as 0, causing artificially low scores.
-**Solution**: Added `isColumnHiddenByWaybackFiltering` to exclude dropped columns from parent score calculations entirely.
-
-## Testing Checklist
-
-When implementing this feature, verify:
-
-- [ ] Wayback section appears when timestamp data is available
-- [ ] Slider adjustments convert out-of-range scores to 'X'
-- [ ] Models with all 'X' individual scores are removed from leaderboard
-- [ ] Models with 'X' global scores are removed after recalculation
-- [ ] Leaf benchmark columns with all 'X' values are hidden
-- [ ] Parent benchmark columns with all 'X' values are hidden
-- [ ] Parent benchmark scores recalculate properly excluding dropped columns
-- [ ] `average_vision_v0` recalculates correctly
-- [ ] Parent calculations exclude wayback-dropped columns (not treated as 0)
-- [ ] Console shows column exclusions and accurate parent calculations
-- [ ] URL state persistence works
-- [ ] Reset functionality works
-- [ ] Date inputs sync with slider
-- [ ] Historical accuracy: scores reflect only available benchmarks at that time
-
 ## Data Flow Summary
 
 ```
@@ -732,39 +683,4 @@ Column visibility check for parent neural_vision_v0: {
 - `updateSliderPosition()` - Added wayback timestamp date formatting
 - `updateActiveFilters()` - Added wayback timestamp filter state management
 
-## Future Enhancements
 
-- More sophisticated timestamp handling for different data sources
-- Performance optimizations for large datasets (caching column visibility checks)
-- Additional filtering modes (e.g., "before date", "after date", "specific date")
-- Batch processing for very large datasets
-- Export functionality for historical leaderboard states
-- Animation/transition effects when switching between time periods
-
-## Summary of Achievements
-
-This implementation successfully creates a **complete time-travel feature** for the Brain-Score leaderboard with the following capabilities:
-
-### ✅ **Core Features Implemented**
-1. **Historical Score Filtering** - Converts out-of-range scores to 'X' based on timestamps
-2. **Intelligent Model Removal** - Removes models with all 'X' scores or 'X' global scores
-3. **Smart Column Hiding** - Hides both leaf and parent benchmark columns with all 'X' values
-4. **Accurate Score Recalculation** - Parent benchmarks only include valid/visible children in calculations
-5. **Persistent State** - Filter settings saved in URL for sharing and bookmarking
-
-### 🎯 **Historical Accuracy Guaranteed**
-- **No artificial score penalties** - Dropped columns don't contribute 0 to averages
-- **True historical representation** - Shows exactly what was available at that time
-- **Accurate parent calculations** - Abstract benchmarks reflect only their visible children
-- **Clean interface** - Hidden irrelevant columns and models for the selected time period
-
-### 🔄 **Complete Data Flow**
-```
-Individual Scores → Parent Calculations → Global Scores → Model Removal → Column Hiding
-```
-
-Each step preserves the integrity of the previous step while accurately representing the historical state of the leaderboard.
-
----
-
-*This implementation allows users to travel back in time and see the Brain-Score leaderboard exactly as it appeared at any historical moment, with complete accuracy and no artifacts from future data.*
